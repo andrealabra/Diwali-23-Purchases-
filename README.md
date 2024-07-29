@@ -1,1 +1,3 @@
 # Diwali-23-Purchases-
+
+Diwali signifies the victory of light over darkness and evil..It is celebrated around mid-September and mid-November and it lasts for around five or six days. According to the Confederation of All India Traders Diwali-related sales added up to an estimated $ 3.75 trillion Rupees in 2023 , which has a big impact on the Indian Economy . Is there an association between age and amount spent by customers for the Diwali celebration. After conducting statistical methods and hypothesis testing using Linear regression we came to the conclusion that we do not have enough evidence that age and amount spent in Diwali is linearly associated.
