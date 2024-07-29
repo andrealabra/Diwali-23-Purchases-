@@ -1,0 +1,271 @@
+---
+title: "DAP"
+author: "Andrea Labra Orozco, Siddhartha Vaddempudi, Vamshi Reddy Madem "
+date: 'December 12'
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+
+```{r}
+house <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-11-14/diwali_sales_data.csv')
+
+```
+
+1.  
+What is the relationship between a customer's age and the amount spent during the festival of Diwali? We find this inquiry intriguing as we aim to compare spending habits between the younger and older generations during the festival. An ethical concern in the dataset arises due to the availability of extensive private information about customers, including their age, marital status, address, occupation, etc., which poses a potential breach of their privacy.
+
+
+2. 
+Data :
+
+This dataset was collected from  https://www.kaggle.com/datasets/saadharoon27/diwali-sales-dataset
+Website which was collected by author SAAD HAROON.
+       
+Sampling method :
+
+Stratified Sampling Method: Stratified sampling involves 
+dividing the population into subgroups or strata based on certain characteristics and then sampling from each stratum. 
+In this case the data is divided first into zones such as Central, Northern, Southern, Eastern and Western and further the respective states of the zones are mentioned.
+
+Subjects :
+
+Subjects were customers who belogned to different zones of India, with different age groups and different occupations who had purchased crackers for Diwali.
+
+        		
+Variables and its attributes :
+
+ | Variables      | Attributes                                                     |
+ |----------------------------------|---------------------------------------------------|
+ | User_Id        |  Unique numeric ID of customer                                 |
+ | Cust_name      | Customer Name                                                  |
+ | Gender         | Gender of the Customer (Male OR Female)                        |
+ | Age_group      | Age group to which customer belongs (ex : 0- 17, 18-25, 26-35) |
+ | Age            | Age of the Customer(in Years)                                  |
+ | Marital_status | Married or Unmarried(0 or 1)                                   |
+ | State          | State to which the customer belongs (ex : Andhra, Maharashtra) |
+ | Zone           | Zone to which the customer belongs (ex :Southern or Northern)  |
+ | Occupation     | Occupation of the customer                                     |
+ | Orders         | No of orders by the customer                                   |
+ | Amount         | Amount spent by the customer for buying diwali items           |
+
+
+
+3. 
+ Linear regression is there an association between age and amount spent by customer 
+
+$H_O: \beta_1 = 0$ 
+
+$H_A: \beta_1 > 0$
+
+
+```{r}
+
+library(dplyr)
+
+house2 <- house %>% 
+  distinct(.keep_all = TRUE) %>% 
+  filter(Orders == 1) %>% 
+  group_by(User_ID) %>% 
+  filter(n() == 1)
+
+library(dplyr)
+x <- house2 %>% 
+  group_by(Cust_name) %>% 
+  summarise(mn = mean(Amount)) %>% 
+  select(mn) %>% 
+  pull()
+hist(x)
+
+
+
+```
+
+Conditions: 
+
+
+
+Assumptions 
+
+```{r}
+mod <- lm(Amount ~ Age, data = house2)
+library(ggfortify)
+autoplot(mod)
+
+#mod <- lm(Amount ~ I(Age/10), data = house2)
+summary(mod)
+```
+
+
+Linearity 
+```{r}
+
+ggplot(house2, aes(x = Age, y = Amount)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = F) +
+  labs(title = "Scatterplot of Amount Spent in Diwali vs. Customer Age",
+       x = "Amount Spent (in Dollars)",
+       y = "Customer Age") +
+  theme_classic()
+
+
+```
+
+
+Normality 
+
+```{r}
+
+qqnorm(resid(mod))
+qqline(resid(mod), col = "purple")
+
+```
+
+E - "Equal" (Constant) Variance  
+```{r}
+
+plot(resid(mod) ~ fitted(mod))
+abline(h = 0, col = "purple")
+
+```
+
+
+Independence:
+
+10% rule - 1,273 is less than 10 % of all of the Diwali customers
+
+Note* 
+Conditions may have not been satisfied,we removes duplicated rows, looks at only those who made one order, and removed rows with duplicated IDs. It seems that there is a something wrong with the data set that we chose. We received approval to move on with this data set for this case. 
+
+About the data 
+1) number of observations, 2) sample means or proportions, and
+3) histogram, barplot, boxplot of your data (whichever plot(s) make sense
+```{r}
+#Summary Stats of Age 
+summary(house2$Age)
+
+#Summary Stats of Amount Spent 
+summary(house2$Amount)
+
+#Number of observations 
+diwaliCou <- count(house2)
+
+#Means
+library(dplyr)
+
+house2 %>%
+  group_by(Age) %>%
+  summarise(
+    mean_Amount = mean(Amount, na.rm = TRUE),
+    sd_Amount = sd(Amount, na.rm = TRUE)
+  )
+
+#Plots about our data 
+#Histogram of age gorups 
+hist(house2$Age, 
+     breaks = 12,
+     col = "skyblue",         
+     main = "Distribution of Age Groups",  
+     xlab = "Age",            
+     ylab = "Frequency",    
+     border = "white")        
+grid()
+legend("topright", legend = "Age", fill = "skyblue")
+
+
+#Histogram of Amount money spent 
+hist(house2$Amount, 
+     breaks = 12,
+     col = "purple",     
+     main = "Distribution of Amount Money Spent",  
+     xlab = "Amount Spent",   
+     ylab = "Frequency",       
+     border = "white"        
+)
+grid()
+legend("topright", legend = "Amount Spent", fill = "purple")
+
+
+```
+
+
+Linear Regression 
+```{r}
+summary(mod)$coefficients[2,3]
+
+# Extract standard error
+sqrt(diag(vcov(mod)))
+
+
+```
+
+```{r}
+#P Value 
+summary(mod)$coefficients[2,4]
+
+
+```
+
+
+```{r}
+
+summary(mod)
+
+```
+
+
+Conclusion: 
+We fail to reject $H_0$: We do not have enough evidence that age and amount spent in Diwali is linearly associated. 
+
+
+Other cool findings about our data :p
+```{r}
+#Product Category Findings 
+house2 %>% 
+  group_by(Product_Category) %>% 
+  summarise(mn = mean(Amount))
+ggplot(house2, aes(x = Amount, y = Product_Category, fill = Product_Category)) +
+  #geom_violin(aes(fill = Product_Category)) +
+  geom_boxplot()
+
+
+#Martial Status & Amount 
+library(ggplot2)
+ggplot(house2, aes(x = factor(Marital_Status), y = Amount, fill = factor(Marital_Status))) +
+  geom_boxplot() +
+  labs(title = "Box Plot: Marital Status & Amount",
+       x = "Marital Status",
+       y = "Amount") +
+  scale_fill_manual(values = c("0" = "red", "1" = "blue"))  
+
+#Amount & Zone 
+ggplot(house2, aes(x = Zone, y = Amount, fill = Zone)) +
+  geom_bar(stat = "summary", fun = "mean", position = "dodge", color = "black") +
+  labs(title = "Bar Chart: Amount & Zone",
+       x = "Zone",
+       y = "Mean Amount") +
+  theme_minimal() 
+
+
+#Amount & Occupation 
+ggplot(house2, aes(x = Amount, y = Occupation )) +
+  geom_boxplot() +
+  labs(title = "Box Plot: Amount & Occupation",
+       x = "Amount",
+       y = "Occupation")
+
+
+
+
+
+```
+
+
+
